@@ -74,7 +74,7 @@ body {
 
 .top-widgets {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 15px;
   margin-bottom: 15px;
 }
@@ -100,10 +100,6 @@ body {
 
 .bgm-controls { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
 .bgm-status { font-size: 0.8rem; margin-top: 8px; opacity: 0.8; font-weight: bold; }
-
-.pomodoro-timer { text-align: center; margin: 5px 0; }
-#pomo-display { font-size: 1.6rem; font-weight: bold; color: var(--danger-color); display: block; }
-.pomo-controls { display: flex; justify-content: center; gap: 6px; }
 
 .goal-section { margin-bottom: 15px; }
 .goal-info-text { display: flex; justify-content: space-between; font-size: 0.9rem; margin-top: 8px; font-weight: 500; }
