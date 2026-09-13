@@ -19,14 +19,48 @@
 <body>
 
   <!-- 학교급 선택 모달 -->
-  <div id="school-modal" class="modal">
+  <div id="school-modal" class="modal" style="display: none;">
     <div class="modal-content">
       <h2>학생 유형을 선택해주세요</h2>
       <p>선택한 유형에 따라 기본 과목 목록이 세팅됩니다.</p>
       <div class="school-btn-group">
-        <button class="btn btn-primary" onclick="setSchoolType('elem')">초등학생</button>
-        <button class="btn btn-primary" onclick="setSchoolType('mid')">중학생</button>
-        <button class="btn btn-primary" onclick="setSchoolType('high')">고등학생</button>
+        <button type="button" class="btn btn-primary" onclick="setSchoolType('elem')">초등학생</button>
+        <button type="button" class="btn btn-primary" onclick="setSchoolType('mid')">중학생</button>
+        <button type="button" class="btn btn-primary" onclick="setSchoolType('high')">고등학생</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- D-Day 설정 모달 -->
+  <div id="dday-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>🎯 D-Day 목표 설정</h2>
+      <div class="form-group" style="text-align: left; margin-top: 15px;">
+        <label for="dday-input-title">목표 이름</label>
+        <input type="text" id="dday-input-title" placeholder="예: 중간고사, 수능">
+      </div>
+      <div class="form-group" style="text-align: left;">
+        <label for="dday-input-date">목표 날짜</label>
+        <input type="date" id="dday-input-date">
+      </div>
+      <div class="modal-btn-group">
+        <button type="button" class="btn btn-success" onclick="saveDdayModal()">저장</button>
+        <button type="button" class="btn btn-outline" onclick="closeDdayModal()">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하루 목표 공부시간 설정 모달 -->
+  <div id="goal-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>⏱️ 하루 목표 공부시간 설정</h2>
+      <div class="form-group" style="text-align: left; margin-top: 15px;">
+        <label for="goal-input-hours">목표 시간 (시간 단위)</label>
+        <input type="number" id="goal-input-hours" min="1" max="24" step="0.5" placeholder="예: 3">
+      </div>
+      <div class="modal-btn-group">
+        <button type="button" class="btn btn-success" onclick="saveGoalModal()">저장</button>
+        <button type="button" class="btn btn-outline" onclick="closeGoalModal()">취소</button>
       </div>
     </div>
   </div>
@@ -40,12 +74,12 @@
       </div>
       <div class="user-info">
         <span id="current-school-display">선택 안됨</span>
-        <button class="btn btn-outline btn-sm" onclick="toggleDarkMode()">🌙 테마</button>
-        <button class="btn btn-outline btn-sm" onclick="requestNotificationPermission()">🔔 알림</button>
-        <button class="btn btn-outline btn-sm" onclick="exportData()">💾 백업</button>
-        <button class="btn btn-outline btn-sm" onclick="importData()">📂 복구</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="toggleDarkMode()">🌙 테마</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="requestNotificationPermission()">🔔 알림</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="exportData()">💾 백업</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="importData()">📂 복구</button>
         <input type="file" id="import-file-input" style="display:none;" accept=".json" onchange="handleImportFile(event)">
-        <button class="btn btn-outline btn-sm" onclick="openSchoolModal()">학교 변경</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="openSchoolModal()">학교 변경</button>
       </div>
     </header>
 
@@ -60,7 +94,7 @@
       <section class="card dday-section">
         <div class="card-header-flex">
           <h2>🎯 D-Day 카운트다운</h2>
-          <button class="btn btn-outline btn-sm" onclick="setDdayPrompt()">목표 설정</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="openDdayModal()">목표 설정</button>
         </div>
         <div id="dday-display" class="dday-display">목표를 설정해주세요</div>
       </section>
@@ -69,10 +103,10 @@
       <section class="card bgm-section">
         <h2>🎧 공부 BGM / 백색소음</h2>
         <div class="bgm-controls">
-          <button class="btn btn-outline btn-sm" onclick="playBGM('rain')">🌧️ 빗소리</button>
-          <button class="btn btn-outline btn-sm" onclick="playBGM('cafe')">☕ 카페</button>
-          <button class="btn btn-outline btn-sm" onclick="playBGM('waves')">🌊 파도</button>
-          <button class="btn btn-danger btn-sm" onclick="stopBGM()">⏹️ 정지</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="playBGM('rain')">🌧️ 빗소리</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="playBGM('cafe')">☕ 카페</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="playBGM('waves')">🌊 파도</button>
+          <button type="button" class="btn btn-danger btn-sm" onclick="stopBGM()">⏹️ 정지</button>
         </div>
         <div id="bgm-status" class="bgm-status">재생 중인 음원 없음</div>
       </section>
@@ -82,7 +116,7 @@
     <section class="card goal-section">
       <div class="card-header-flex">
         <h2>⏱️ 오늘의 공부 목표 달성률</h2>
-        <button class="btn btn-outline btn-sm" onclick="setDailyGoalPrompt()">목표시간 설정</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="openGoalModal()">목표시간 설정</button>
       </div>
       <div class="goal-progress-box">
         <div class="goal-info-text">
@@ -155,7 +189,7 @@
       <section class="card diary-section">
         <h2>✏️ 선택한 날짜의 한 줄 공부 일기</h2>
         <textarea id="daily-diary-input" placeholder="오늘 공부하며 느낀 점이나 반성할 점을 남겨보세요." rows="3"></textarea>
-        <button class="btn btn-primary btn-sm" onclick="saveDailyDiary()" style="margin-top: 8px; float: right;">일기 저장</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="saveDailyDiary()" style="margin-top: 8px; float: right;">일기 저장</button>
       </section>
 
       <!-- 주간 리포트 & 달성률 차트 -->
