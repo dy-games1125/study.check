@@ -3,29 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>스터디 체크 - 공부 계획 및 달성률 관리</title>
+  <title>스터디 체크 - 올인원 스마트 학습 관리</title>
   <link rel="stylesheet" href="index.css">
-  <!-- Chart.js 라이브러리 (지난주 달성률 그래프용) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <!-- OneSignal SDK 연동 -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
       await OneSignal.init({
-        appId: "4b760146-95e8-4be6-b0ca-1442b557ff95", // 본인의 App ID
+        appId: "4b760146-95e8-4be6-b0ca-1442b557ff95",
       });
     });
   </script>
 </head>
 <body>
 
-  <!-- 1. 학교급 선택 모달 -->
+  <!-- 학교급 선택 모달 -->
   <div id="school-modal" class="modal">
     <div class="modal-content">
       <h2>학생 유형을 선택해주세요</h2>
-      <p>선택한 유형에 따라 과목이 자동으로 설정됩니다.</p>
+      <p>선택한 유형에 따라 기본 과목 목록이 세팅됩니다.</p>
       <div class="school-btn-group">
         <button class="btn btn-primary" onclick="setSchoolType('elem')">초등학생</button>
         <button class="btn btn-primary" onclick="setSchoolType('mid')">중학생</button>
@@ -37,21 +34,94 @@
   <div class="container">
     <!-- 헤더 -->
     <header class="header">
-      <h1>📚 스터디 체크</h1>
+      <div class="header-title">
+        <h1>📚 스터디 체크</h1>
+        <span id="streak-display" class="streak-badge">🔥 0일 연속</span>
+      </div>
       <div class="user-info">
         <span id="current-school-display">선택 안됨</span>
-        <button class="btn btn-outline btn-sm" onclick="requestNotificationPermission()">🔔 알림 켜기</button>
+        <button class="btn btn-outline btn-sm" onclick="toggleDarkMode()">🌙 테마</button>
+        <button class="btn btn-outline btn-sm" onclick="requestNotificationPermission()">🔔 알림</button>
+        <button class="btn btn-outline btn-sm" onclick="exportData()">💾 백업</button>
+        <button class="btn btn-outline btn-sm" onclick="importData()">📂 복구</button>
+        <input type="file" id="import-file-input" style="display:none;" accept=".json" onchange="handleImportFile(event)">
         <button class="btn btn-outline btn-sm" onclick="openSchoolModal()">학교 변경</button>
       </div>
     </header>
 
-    <!-- 메인 그리드 레이아웃 -->
+    <!-- 동기부여 명언 배너 -->
+    <div class="quote-banner card">
+      <span id="quote-text">💡 "끝까지 해내기 전까지는 항상 불가능해 보인다."</span>
+    </div>
+
+    <!-- 상단 3개 위젯 레이아웃 -->
+    <div class="top-widgets">
+      <!-- D-Day 카운트다운 -->
+      <section class="card dday-section">
+        <div class="card-header-flex">
+          <h2>🎯 D-Day 카운트다운</h2>
+          <button class="btn btn-outline btn-sm" onclick="setDdayPrompt()">목표 설정</button>
+        </div>
+        <div id="dday-display" class="dday-display">목표를 설정해주세요</div>
+      </section>
+
+      <!-- 공부 BGM -->
+      <section class="card bgm-section">
+        <h2>🎧 공부 BGM / 백색소음</h2>
+        <div class="bgm-controls">
+          <button class="btn btn-outline btn-sm" onclick="playBGM('rain')">🌧️ 빗소리</button>
+          <button class="btn btn-outline btn-sm" onclick="playBGM('cafe')">☕ 카페</button>
+          <button class="btn btn-outline btn-sm" onclick="playBGM('waves')">🌊 파도</button>
+          <button class="btn btn-danger btn-sm" onclick="stopBGM()">⏹️ 정지</button>
+        </div>
+        <div id="bgm-status" class="bgm-status">재생 중인 음원 없음</div>
+      </section>
+
+      <!-- 뽀모도로 타이머 -->
+      <section class="card pomodoro-section">
+        <h2>🍅 뽀모도로 타이머</h2>
+        <div class="pomodoro-timer">
+          <span id="pomo-display">25:00</span>
+          <span id="pomo-status-label" class="sub-text">집중 시간</span>
+        </div>
+        <div class="pomo-controls">
+          <button id="pomo-start-btn" class="btn btn-success btn-sm" onclick="togglePomodoro()">시작</button>
+          <button class="btn btn-outline btn-sm" onclick="resetPomodoro()">리셋</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- 일일 순공 목표 달성률 바 -->
+    <section class="card goal-section">
+      <div class="card-header-flex">
+        <h2>⏱️ 오늘의 공부 목표 달성률</h2>
+        <button class="btn btn-outline btn-sm" onclick="setDailyGoalPrompt()">목표시간 설정</button>
+      </div>
+      <div class="goal-progress-box">
+        <div class="goal-info-text">
+          <span>달성 공부시간: <strong id="current-studied-time">0분</strong> / 목표: <strong id="target-study-time">180분</strong></span>
+          <span id="goal-percentage-text">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div id="goal-progress-fill" class="progress-bar-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 메인 레이아웃 -->
     <main class="main-content">
       
-      <!-- 좌측/상단: 공부 계획 입력 및 달력 -->
+      <!-- 공부 계획 입력/수정 폼 -->
       <section class="card plan-section">
-        <h2>📅 공부 계획 세우기</h2>
+        <h2 id="form-title">📅 공부 계획 세우기</h2>
         <form id="plan-form">
+          <input type="hidden" id="editing-id" value="">
+          
+          <div class="form-group">
+            <label for="plan-title">공부 제목</label>
+            <input type="text" id="plan-title" placeholder="예: 과학 1단원 내용정리" required>
+          </div>
+
           <div class="form-group">
             <label for="plan-date">날짜</label>
             <input type="date" id="plan-date" required>
@@ -70,51 +140,55 @@
 
           <div class="form-group">
             <label for="subject-select">과목 선택</label>
-            <select id="subject-select" onchange="handleSubjectChange()" required>
-              <!-- JS에서 동적 생성 -->
-            </select>
+            <select id="subject-select" onchange="handleSubjectChange()" required></select>
           </div>
 
-          <!-- 기타 과목 직접 입력창 -->
           <div class="form-group" id="custom-subject-group" style="display: none;">
             <label for="custom-subject">직접 입력</label>
             <input type="text" id="custom-subject" placeholder="과목명을 입력하세요">
           </div>
 
-          <button type="submit" class="btn btn-success btn-block">계획 추가하기</button>
+          <div class="btn-group-form">
+            <button type="submit" id="submit-btn" class="btn btn-success btn-block">계획 추가하기</button>
+            <button type="button" id="cancel-edit-btn" class="btn btn-outline btn-block" style="display:none;" onclick="cancelEdit()">수정 취소</button>
+          </div>
         </form>
       </section>
 
-      <!-- 우측/하단: 오늘의 계획 및 달성 현황 -->
+      <!-- 계획 목록 -->
       <section class="card list-section">
         <div class="section-header">
           <h2>📝 계획 목록 및 달성 체크</h2>
           <input type="date" id="view-date-picker">
         </div>
-        <div id="plan-list" class="plan-list">
-          <!-- JS에서 동적 생성 -->
-        </div>
+        <div id="plan-list" class="plan-list"></div>
       </section>
 
-      <!-- 주간 리포트 & 그래프 섹션 -->
+      <!-- 오늘의 공부 일기 -->
+      <section class="card diary-section">
+        <h2>✏️ 선택한 날짜의 한 줄 공부 일기</h2>
+        <textarea id="daily-diary-input" placeholder="오늘 공부하며 느낀 점이나 반성할 점을 남겨보세요." rows="3"></textarea>
+        <button class="btn btn-primary btn-sm" onclick="saveDailyDiary()" style="margin-top: 8px; float: right;">일기 저장</button>
+      </section>
+
+      <!-- 주간 리포트 & 달성률 차트 -->
       <section class="card report-section">
-        <h2>📊 지난주 달성률 리포트 <span class="sub-text">(매주 월요일 08:00 기준 집계)</span></h2>
+        <h2>📊 지난주 달성률 리포트 <span id="weekly-date-range" class="sub-text"></span></h2>
         <div class="stats-box">
-          <div class="stat-item">
-            <span>지난주 총 계획</span>
-            <strong id="weekly-total">0개</strong>
-          </div>
-          <div class="stat-item">
-            <span>달성한 계획</span>
-            <strong id="weekly-completed">0개</strong>
-          </div>
-          <div class="stat-item">
-            <span>최종 달성률</span>
-            <strong id="weekly-rate" class="highlight">0%</strong>
-          </div>
+          <div class="stat-item"><span>총 계획</span><strong id="weekly-total">0개</strong></div>
+          <div class="stat-item"><span>달성한 계획</span><strong id="weekly-completed">0개</strong></div>
+          <div class="stat-item"><span>달성률</span><strong id="weekly-rate" class="highlight">0%</strong></div>
         </div>
         <div class="chart-container">
           <canvas id="weeklyChart"></canvas>
+        </div>
+      </section>
+
+      <!-- 과목별 시간 분포 차트 -->
+      <section class="card report-section">
+        <h2>🎨 과목별 공부 시간 비율 (전체 누적)</h2>
+        <div class="chart-container">
+          <canvas id="subjectDistributionChart"></canvas>
         </div>
       </section>
 
