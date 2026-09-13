@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>스터디 체크 - 공부 계획 및 달성률 관리</title>
+  <link rel="stylesheet" href="index.css">
+  <!-- Chart.js 라이브러리 (지난주 달성률 그래프용) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- OneSignal SDK 연동 -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "4b760146-95e8-4be6-b0ca-1442b557ff95", // 본인의 App ID
+      });
+    });
+  </script>
+</head>
+<body>
+
+  <!-- 1. 학교급 선택 모달 -->
+  <div id="school-modal" class="modal">
+    <div class="modal-content">
+      <h2>학생 유형을 선택해주세요</h2>
+      <p>선택한 유형에 따라 과목이 자동으로 설정됩니다.</p>
+      <div class="school-btn-group">
+        <button class="btn btn-primary" onclick="setSchoolType('elem')">초등학생</button>
+        <button class="btn btn-primary" onclick="setSchoolType('mid')">중학생</button>
+        <button class="btn btn-primary" onclick="setSchoolType('high')">고등학생</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- 헤더 -->
+    <header class="header">
+      <h1>📚 스터디 체크</h1>
+      <div class="user-info">
+        <span id="current-school-display">선택 안됨</span>
+        <button class="btn btn-outline btn-sm" onclick="requestNotificationPermission()">🔔 알림 켜기</button>
+        <button class="btn btn-outline btn-sm" onclick="openSchoolModal()">학교 변경</button>
+      </div>
+    </header>
+
+    <!-- 메인 그리드 레이아웃 -->
+    <main class="main-content">
+      
+      <!-- 좌측/상단: 공부 계획 입력 및 달력 -->
+      <section class="card plan-section">
+        <h2>📅 공부 계획 세우기</h2>
+        <form id="plan-form">
+          <div class="form-group">
+            <label for="plan-date">날짜</label>
+            <input type="date" id="plan-date" required>
+          </div>
+
+          <div class="form-group row">
+            <div>
+              <label for="start-time">시작 시간</label>
+              <input type="time" id="start-time" required>
+            </div>
+            <div>
+              <label for="duration">공부 시간(분)</label>
+              <input type="number" id="duration" min="30" step="10" value="30" placeholder="최소 30분" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="subject-select">과목 선택</label>
+            <select id="subject-select" onchange="handleSubjectChange()" required>
+              <!-- JS에서 동적 생성 -->
+            </select>
+          </div>
+
+          <!-- 기타 과목 직접 입력창 -->
+          <div class="form-group" id="custom-subject-group" style="display: none;">
+            <label for="custom-subject">직접 입력</label>
+            <input type="text" id="custom-subject" placeholder="과목명을 입력하세요">
+          </div>
+
+          <button type="submit" class="btn btn-success btn-block">계획 추가하기</button>
+        </form>
+      </section>
+
+      <!-- 우측/하단: 오늘의 계획 및 달성 현황 -->
+      <section class="card list-section">
+        <div class="section-header">
+          <h2>📝 계획 목록 및 달성 체크</h2>
+          <input type="date" id="view-date-picker">
+        </div>
+        <div id="plan-list" class="plan-list">
+          <!-- JS에서 동적 생성 -->
+        </div>
+      </section>
+
+      <!-- 주간 리포트 & 그래프 섹션 -->
+      <section class="card report-section">
+        <h2>📊 지난주 달성률 리포트 <span class="sub-text">(매주 월요일 08:00 기준 집계)</span></h2>
+        <div class="stats-box">
+          <div class="stat-item">
+            <span>지난주 총 계획</span>
+            <strong id="weekly-total">0개</strong>
+          </div>
+          <div class="stat-item">
+            <span>달성한 계획</span>
+            <strong id="weekly-completed">0개</strong>
+          </div>
+          <div class="stat-item">
+            <span>최종 달성률</span>
+            <strong id="weekly-rate" class="highlight">0%</strong>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="weeklyChart"></canvas>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="index.js"></script>
+</body>
+</html>
