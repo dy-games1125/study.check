@@ -31,11 +31,6 @@ let currentAudio = null;
 let weeklyChartInstance = null;
 let subjectChartInstance = null;
 
-// 뽀모도로 변수
-let pomoTime = 25 * 60;
-let pomoTimerId = null;
-let isPomoWork = true;
-
 document.addEventListener('DOMContentLoaded', () => {
   if (isDarkMode) document.body.classList.add('dark-mode');
 
@@ -77,53 +72,6 @@ function playBGM(type) {
 function stopBGM() {
   if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   document.getElementById('bgm-status').textContent = '재생 중인 음원 없음';
-}
-
-// 뽀모도로 타이머 로직
-function togglePomodoro() {
-  const btn = document.getElementById('pomo-start-btn');
-  if (pomoTimerId) {
-    clearInterval(pomoTimerId);
-    pomoTimerId = null;
-    btn.textContent = '일시정지';
-    btn.className = 'btn btn-primary btn-sm';
-  } else {
-    btn.textContent = '일시정지';
-    btn.className = 'btn btn-danger btn-sm';
-    pomoTimerId = setInterval(() => {
-      pomoTime--;
-      updatePomoDisplay();
-      if (pomoTime <= 0) {
-        clearInterval(pomoTimerId);
-        pomoTimerId = null;
-        alert(isPomoWork ? "🎉 25분 집중 완료! 5분 휴식하세요." : "🔔 휴식 완료! 다시 집중해봅시다.");
-        isPomoWork = !isPomoWork;
-        pomoTime = isPomoWork ? 25 * 60 : 5 * 60;
-        document.getElementById('pomo-status-label').textContent = isPomoWork ? '집중 시간' : '휴식 시간';
-        updatePomoDisplay();
-        btn.textContent = '시작';
-        btn.className = 'btn btn-success btn-sm';
-      }
-    }, 1000);
-  }
-}
-
-function resetPomodoro() {
-  if (pomoTimerId) clearInterval(pomoTimerId);
-  pomoTimerId = null;
-  isPomoWork = true;
-  pomoTime = 25 * 60;
-  document.getElementById('pomo-status-label').textContent = '집중 시간';
-  updatePomoDisplay();
-  const btn = document.getElementById('pomo-start-btn');
-  btn.textContent = '시작';
-  btn.className = 'btn btn-success btn-sm';
-}
-
-function updatePomoDisplay() {
-  const m = String(Math.floor(pomoTime / 60)).padStart(2, '0');
-  const s = String(pomoTime % 60).padStart(2, '0');
-  document.getElementById('pomo-display').textContent = `${m}:${s}`;
 }
 
 // 일일 목표 순공 시간 관리
