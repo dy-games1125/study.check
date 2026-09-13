@@ -12,10 +12,11 @@ const QUOTES = [
   "💡 지금 쉬면 꿈을 꾸지만, 지금 공부하면 꿈을 이룬다."
 ];
 
+// 오디오 리소스 (안정적인 퍼블릭 CDN 소음 파일 적용)
 const BGM_SOURCES = {
-  rain: { title: '🌧️ 빗소리', url: 'https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg' },
-  cafe: { title: '☕ 카페 소리', url: 'https://actions.google.com/sounds/v1/ambiences/coffee_shop.ogg' },
-  waves: { title: '🌊 파도 소리', url: 'https://actions.google.com/sounds/v1/weather/ocean_waves.ogg' }
+  rain: { title: '🌧️ 빗소리', url: 'https://cdn.pixabay.com/download/audio/2021/09/06/audio_4a4cb4b045.mp3' },
+  cafe: { title: '☕ 카페 소리', url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3' },
+  waves: { title: '🌊 파도 소리', url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8b4b73b.mp3' }
 };
 
 const SCHOOL_NAMES = { elem: '초등학생', mid: '중학생', high: '고등학생' };
@@ -59,28 +60,79 @@ function displayRandomQuote() {
 
 // BGM 재생/정지
 function playBGM(type) {
-  if (currentAudio) currentAudio.pause();
+  stopBGM();
+
   const bgm = BGM_SOURCES[type];
   if (!bgm) return;
 
   currentAudio = new Audio(bgm.url);
   currentAudio.loop = true;
-  currentAudio.play();
-  document.getElementById('bgm-status').textContent = `🎵 재생 중: ${bgm.title}`;
+  
+  const playPromise = currentAudio.play();
+  if (playPromise !== undefined) {
+    playPromise.then(() => {
+      document.getElementById('bgm-status').textContent = `🎵 재생 중: ${bgm.title}`;
+    }).catch(error => {
+      console.error("Audio playback error:", error);
+      document.getElementById('bgm-status').textContent = '⚠️ 재생에 실패했습니다. 다시 클릭해주세요.';
+    });
+  }
 }
 
 function stopBGM() {
-  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
   document.getElementById('bgm-status').textContent = '재생 중인 음원 없음';
 }
 
-// 일일 목표 순공 시간 관리
-function setDailyGoalPrompt() {
-  const hours = prompt("하루 목표 공부 시간(시간 단위)을 입력하세요 (예: 3):", targetMinutes / 60);
-  if (!hours || isNaN(hours)) return;
-  targetMinutes = parseFloat(hours) * 60;
+// D-Day 모달 관리
+function openDdayModal() {
+  document.getElementById('dday-input-title').value = ddayData ? ddayData.title : '';
+  document.getElementById('dday-input-date').value = ddayData ? ddayData.date : '';
+  document.getElementById('dday-modal').style.display = 'flex';
+}
+
+function closeDdayModal() {
+  document.getElementById('dday-modal').style.display = 'none';
+}
+
+function saveDdayModal() {
+  const title = document.getElementById('dday-input-title').value.trim();
+  const dateStr = document.getElementById('dday-input-date').value;
+
+  if (!title || !dateStr) {
+    alert("목표 이름과 날짜를 모두 입력해주세요.");
+    return;
+  }
+
+  ddayData = { title, date: dateStr };
+  localStorage.setItem('study_dday', JSON.stringify(ddayData));
+  renderDday();
+  closeDdayModal();
+}
+
+// 일일 목표시간 모달 관리
+function openGoalModal() {
+  document.getElementById('goal-input-hours').value = targetMinutes / 60;
+  document.getElementById('goal-modal').style.display = 'flex';
+}
+
+function closeGoalModal() {
+  document.getElementById('goal-modal').style.display = 'none';
+}
+
+function saveGoalModal() {
+  const hours = parseFloat(document.getElementById('goal-input-hours').value);
+  if (isNaN(hours) || hours <= 0) {
+    alert("올바른 목표 시간을 입력해주세요.");
+    return;
+  }
+  targetMinutes = hours * 60;
   localStorage.setItem('study_target_minutes', targetMinutes);
   renderGoalProgress();
+  closeGoalModal();
 }
 
 function renderGoalProgress() {
@@ -97,7 +149,7 @@ function renderGoalProgress() {
   document.getElementById('goal-progress-fill').style.width = `${percent}%`;
 }
 
-// 공부 일기 관리
+// 일기 저장 및 불러오기
 function saveDailyDiary() {
   const selectedDate = document.getElementById('view-date-picker').value;
   const content = document.getElementById('daily-diary-input').value.trim();
@@ -174,17 +226,6 @@ function toggleDarkMode() {
   document.body.classList.toggle('dark-mode', isDarkMode);
   localStorage.setItem('study_darkmode', isDarkMode);
   renderCharts();
-}
-
-function setDdayPrompt() {
-  const title = prompt("D-Day 목표 이름 (예: 수능):");
-  if (!title) return;
-  const dateStr = prompt("목표 날짜 (YYYY-MM-DD):");
-  if (!dateStr) return;
-
-  ddayData = { title, date: dateStr };
-  localStorage.setItem('study_dday', JSON.stringify(ddayData));
-  renderDday();
 }
 
 function renderDday() {
@@ -373,7 +414,7 @@ function renderPlans() {
 
     let actionBtn = plan.completed
       ? '<span style="color:var(--success-color); font-weight:bold;">✓ 완료</span>'
-      : `<button class="btn btn-success btn-sm" onclick="completePlan(${plan.id})" ${isTimeReached ? '' : 'disabled style="opacity:0.5;"'}>달성</button>`;
+      : `<button type="button" class="btn btn-success btn-sm" onclick="completePlan(${plan.id})" ${isTimeReached ? '' : 'disabled style="opacity:0.5;"'}>달성</button>`;
 
     item.innerHTML = `
       <div class="plan-info">
@@ -382,8 +423,8 @@ function renderPlans() {
       </div>
       <div class="plan-actions">
         ${actionBtn}
-        <button class="btn btn-outline btn-sm" onclick="editPlan(${plan.id})">수정</button>
-        <button class="btn btn-danger btn-sm" onclick="deletePlan(${plan.id})">삭제</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="editPlan(${plan.id})">수정</button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="deletePlan(${plan.id})">삭제</button>
       </div>
     `;
     listContainer.appendChild(item);
