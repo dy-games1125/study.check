@@ -1,28 +1,26 @@
 /**
- * 스터디 팜 (Study Farm) Main JavaScript
+ * 스터디 팜 (Study Farm) Logic
  */
 
 // --- Global State ---
 let userState = {
-  grade: null, // 'elementary' | 'middle' | 'high'
-  sp: 2000,    // Initial Welcome Gift 2,000 SP
-  initialSet: false
+  grade: null,
+  sp: 2000
 };
 
-let plans = []; // Array of plan objects
+let plans = [];
 let seedInventory = {
-  'seed_carrot': 3, // Initial default seeds
+  'seed_carrot': 3,
   'seed_sunflower': 1
 };
-let harvestedCrops = []; // Array of harvested crop records
-let obtainedPets = {};   // { petId: count }
-let equippedPets = [];   // Array of petIds (max 2)
+let harvestedCrops = [];
+let obtainedPets = {};
+let equippedPets = [];
 
-// Current view date state
 let currentDate = new Date();
 let selectedDateStr = formatDate(new Date());
 
-// --- Static Data Definitions ---
+// --- Static Data ---
 const SUBJECTS_BY_GRADE = {
   elementary: ['국어', '수학', '사회', '과학', '영어', '기타'],
   middle: ['국어', '수학', '사회', '역사', '과학', '영어', '기타'],
@@ -30,11 +28,11 @@ const SUBJECTS_BY_GRADE = {
 };
 
 const SEEDS_DATA = {
-  'seed_carrot': { id: 'seed_carrot', name: '파릇파릇 당근 씨앗', icon: '🥕', rarity: 'Common', rate: 0.50, spBonus: 1.05 },
-  'seed_sunflower': { id: 'seed_sunflower', name: '싱싱한 해바라기 씨앗', icon: '🌻', rarity: 'Rare', rate: 0.35, spBonus: 1.15 },
-  'seed_clover': { id: 'seed_clover', name: '행운의 4잎 클로버 씨앗', icon: '🍀', rarity: 'Epic', rate: 0.115, spBonus: 1.30 },
-  'seed_rose': { id: 'seed_rose', name: '무지개 장미 씨앗', icon: '🌹', rarity: 'Legendary', rate: 0.03, spBonus: 1.50 },
-  'seed_tree': { id: 'seed_tree', name: '황금 스터디나무 씨앗', icon: '🌳', rarity: 'SSR', rate: 0.005, spBonus: 2.00 }
+  'seed_carrot': { id: 'seed_carrot', name: '파릇파릇 당근 씨앗', icon: '🥕', rarity: 'Common', spBonus: 1.05 },
+  'seed_sunflower': { id: 'seed_sunflower', name: '싱싱한 해바라기 씨앗', icon: '🌻', rarity: 'Rare', spBonus: 1.15 },
+  'seed_clover': { id: 'seed_clover', name: '행운의 4잎 클로버 씨앗', icon: '🍀', rarity: 'Epic', spBonus: 1.30 },
+  'seed_rose': { id: 'seed_rose', name: '무지개 장미 씨앗', icon: '🌹', rarity: 'Legendary', spBonus: 1.50 },
+  'seed_tree': { id: 'seed_tree', name: '황금 스터디나무 씨앗', icon: '🌳', rarity: 'SSR', spBonus: 2.00 }
 };
 
 const PETS_DATA = {
@@ -46,12 +44,12 @@ const PETS_DATA = {
 };
 
 const SYNERGIES = [
-  { id: 'syn_wisdom', name: '지혜와 집중', petReq: ['pet_owl', 'pet_panda'], desc: '추가 SP +25% 시너지 보너스', bonus: 0.25 },
-  { id: 'syn_forest', name: '숲속 공부방', petReq: ['pet_squirrel', 'pet_owl'], desc: '추가 SP +15% 시너지 보너스', bonus: 0.15 },
-  { id: 'syn_cute', name: '귀요미 동맹', petReq: ['pet_chick', 'pet_shiba'], desc: '추가 SP +10% 시너지 보너스', bonus: 0.10 }
+  { id: 'syn_wisdom', name: '지혜와 집중', petReq: ['pet_owl', 'pet_panda'], desc: '추가 SP +25% 시너지', bonus: 0.25 },
+  { id: 'syn_forest', name: '숲속 공부방', petReq: ['pet_squirrel', 'pet_owl'], desc: '추가 SP +15% 시너지', bonus: 0.15 },
+  { id: 'syn_cute', name: '귀요미 동맹', petReq: ['pet_chick', 'pet_shiba'], desc: '추가 SP +10% 시너지', bonus: 0.10 }
 ];
 
-// --- Initialize App ---
+// --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
   loadLocalStorage();
   initTabs();
@@ -59,22 +57,14 @@ document.addEventListener('DOMContentLoaded', () => {
   initEvents();
   renderApp();
 
-  // If grade not set, prompt grade modal
   if (!userState.grade) {
     document.getElementById('schoolModal').classList.remove('hidden');
   }
 });
 
-// --- LocalStorage Logic ---
+// --- LocalStorage ---
 function saveLocalStorage() {
-  const data = {
-    userState,
-    plans,
-    seedInventory,
-    harvestedCrops,
-    obtainedPets,
-    equippedPets
-  };
+  const data = { userState, plans, seedInventory, harvestedCrops, obtainedPets, equippedPets };
   localStorage.setItem('study_farm_data', JSON.stringify(data));
 }
 
@@ -90,7 +80,7 @@ function loadLocalStorage() {
       obtainedPets = data.obtainedPets || {};
       equippedPets = data.equippedPets || [];
     } catch (e) {
-      console.error('Failed to parse local storage', e);
+      console.error(e);
     }
   }
 }
@@ -104,28 +94,20 @@ function initTabs() {
       tabBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
-      document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.add('hidden');
-      });
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
       document.getElementById(targetTab).classList.remove('hidden');
 
-      if (targetTab === 'tab-report') {
-        renderWeeklyReport();
-      }
+      if (targetTab === 'tab-report') renderWeeklyReport();
     });
   });
 }
 
-// --- UI Rendering Main ---
+// --- Render Main ---
 function renderApp() {
-  // User Grade Badge
   const gradeLabels = { elementary: '초등학생 🎒', middle: '중학생 🏫', high: '고등학생 🎓' };
-  document.getElementById('userGradeBadge').textContent = gradeLabels[userState.grade] || '학교를 선택해 주세요';
-
-  // SP Display
+  document.getElementById('userGradeBadge').textContent = gradeLabels[userState.grade] || '학교 선택 필요';
   document.getElementById('userSp').textContent = userState.sp.toLocaleString();
 
-  // Render Sub-Views
   renderCalendar();
   renderPlanList();
   renderSeedInventory();
@@ -136,7 +118,6 @@ function renderApp() {
   saveLocalStorage();
 }
 
-// --- Date Formatting Helpers ---
 function formatDate(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -144,7 +125,7 @@ function formatDate(date) {
   return `${y}-${m}-${d}`;
 }
 
-// --- Calendar System ---
+// --- Calendar ---
 function initCalendar() {
   document.getElementById('prevMonthBtn').addEventListener('click', () => {
     currentDate.setMonth(currentDate.getMonth() - 1);
@@ -174,7 +155,6 @@ function renderCalendar() {
   const grid = document.getElementById('calendarGrid');
   grid.innerHTML = '';
 
-  // Previous month empty cells
   for (let i = 0; i < firstDay; i++) {
     const empty = document.createElement('div');
     empty.className = 'calendar-day-cell opacity-20 pointer-events-none';
@@ -184,28 +164,20 @@ function renderCalendar() {
   const todayStr = formatDate(new Date());
 
   for (let d = 1; d <= lastDate; d++) {
-    const dayDate = new Date(year, month, d);
-    const dateStr = formatDate(dayDate);
-
+    const dateStr = formatDate(new Date(year, month, d));
     const cell = document.createElement('div');
     cell.className = `calendar-day-cell ${dateStr === todayStr ? 'today' : ''} ${dateStr === selectedDateStr ? 'selected' : ''}`;
     
-    // Day plans summary
     const dayPlans = plans.filter(p => p.date === dateStr);
     const dayCrops = dayPlans.filter(p => p.harvestedCrop).map(p => p.harvestedCrop.icon);
-    const dayPets = dayPlans.flatMap(p => p.metPets || []).map(p => p.icon);
-
-    let iconsHtml = '';
-    if (dayCrops.length > 0) iconsHtml += `<span>${dayCrops.join('')}</span>`;
-    if (dayPets.length > 0) iconsHtml += `<span class="text-xs">${dayPets.join('')}</span>`;
 
     cell.innerHTML = `
       <div class="flex justify-between items-center text-xs">
         <span class="font-bold">${d}</span>
-        ${dayPlans.length > 0 ? `<span class="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded">${dayPlans.length}건</span>` : ''}
+        ${dayPlans.length > 0 ? `<span class="text-[10px] bg-emerald-100 text-emerald-800 px-1 rounded font-bold">${dayPlans.length}건</span>` : ''}
       </div>
       <div class="flex flex-wrap gap-0.5 text-xs mt-1">
-        ${iconsHtml}
+        ${dayCrops.join('')}
       </div>
     `;
 
@@ -219,7 +191,7 @@ function renderCalendar() {
   }
 }
 
-// --- Plan & Farm List Rendering ---
+// --- Plan List & Interactive Actions ---
 function renderPlanList() {
   document.getElementById('selectedDateTitle').textContent = `${selectedDateStr} 공부 계획`;
   const container = document.getElementById('planList');
@@ -230,8 +202,7 @@ function renderPlanList() {
   if (dayPlans.length === 0) {
     container.innerHTML = `
       <div class="text-center py-10 text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-        <i class="fa-solid fa-seedling text-3xl mb-2 text-slate-300"></i>
-        <p class="text-sm">등록된 공부 계획이 없습니다. 계획을 추가해 보세요!</p>
+        <p class="text-sm font-semibold">등록된 공부 계획이 없습니다. 상단의 [+ 계획 추가하기] 버튼을 누르세요!</p>
       </div>
     `;
     return;
@@ -239,83 +210,74 @@ function renderPlanList() {
 
   const now = new Date();
   const nowStr = formatDate(now);
-  const currentMinutesNow = now.getHours() * 60 + now.getMinutes();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
   dayPlans.forEach(plan => {
     const seedInfo = SEEDS_DATA[plan.seedId] || SEEDS_DATA['seed_carrot'];
-    
-    // Calculate time windows
-    const [sHour, sMin] = plan.startTime.split(':').map(Number);
-    const [eHour, eMin] = plan.endTime.split(':').map(Number);
-    const startTotal = sHour * 60 + sMin;
-    const endTotal = eHour * 60 + eMin;
-    const totalDuration = endTotal - startTotal;
+    const [sH, sM] = plan.startTime.split(':').map(Number);
+    const [eH, eM] = plan.endTime.split(':').map(Number);
+    const totalMin = (eH * 60 + eM) - (sH * 60 + sM);
 
-    // Check if current time is within study window
     const isToday = (plan.date === nowStr);
-    const isTimeWindow = isToday && (currentMinutesNow >= startTotal && currentMinutesNow <= endTotal);
-    const isEnded = isToday ? (currentMinutesNow >= endTotal) : (new Date(plan.date) < new Date(nowStr));
+    const isTimeWindow = isToday && (currentMinutes >= (sH*60+sM) && currentMinutes <= (eH*60+eM));
 
-    // Growth Stages: 0: 씨앗, 25: 새싹, 50: 줄기, 75: 꽃, 100: 완숙
-    const stageIcons = { 0: '🌱 씨앗', 25: '🌿 새싹', 50: '🪵 줄기', 75: '🌸 꽃', 100: seedInfo.icon + ' 완숙' };
-    const currentStageName = stageIcons[plan.waterStage || 0];
+    const stages = { 0: '🌱 씨앗', 25: '🌿 새싹', 50: '🪵 줄기', 75: '🌸 꽃', 100: seedInfo.icon + ' 완숙' };
+    const currentStageName = stages[plan.waterStage || 0];
 
-    const planCard = document.createElement('div');
-    planCard.className = `plant-card bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 relative ${plan.status === 'completed' ? 'bg-emerald-50/50 border-emerald-300' : ''}`;
+    const card = document.createElement('div');
+    card.className = `plant-card bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 ${plan.status === 'completed' ? 'bg-emerald-50/60 border-emerald-300' : ''}`;
 
-    planCard.innerHTML = `
+    card.innerHTML = `
       <div class="flex justify-between items-start">
         <div class="flex items-center gap-3">
-          <div class="text-3xl p-2 bg-white rounded-xl shadow-sm border border-slate-100">
+          <div class="text-3xl p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100">
             ${plan.status === 'completed' ? plan.harvestedCrop?.icon || seedInfo.icon : seedInfo.icon}
           </div>
           <div>
             <div class="flex items-center gap-2">
               <span class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">${plan.subject}</span>
-              <span class="text-xs text-slate-400"><i class="fa-regular fa-clock mr-1"></i>${plan.startTime} ~ ${plan.endTime} (${totalDuration}분)</span>
+              <span class="text-xs text-slate-500 font-semibold"><i class="fa-regular fa-clock mr-1"></i>${plan.startTime} ~ ${plan.endTime} (${totalMin}분)</span>
             </div>
-            <h4 class="font-bold text-slate-800 mt-0.5">${plan.title}</h4>
+            <h4 class="font-bold text-slate-800 mt-1">${plan.title}</h4>
           </div>
         </div>
-        <button onclick="deletePlan('${plan.id}')" class="text-slate-300 hover:text-red-500 text-sm p-1">
+        <button onclick="deletePlan('${plan.id}')" class="text-slate-300 hover:text-red-500 text-sm p-1.5 cursor-pointer">
           <i class="fa-solid fa-trash"></i>
         </button>
       </div>
 
-      <!-- Water & Growth Progress -->
+      <!-- Growth Progress -->
       <div class="space-y-1">
-        <div class="flex justify-between text-xs text-slate-500 font-semibold">
-          <span>작물 성장 단계: <strong class="text-emerald-600">${currentStageName}</strong></span>
-          <span>물주기 진행률: ${plan.waterStage || 0}%</span>
+        <div class="flex justify-between text-xs text-slate-600 font-bold">
+          <span>단계: <strong class="text-emerald-600">${currentStageName}</strong></span>
+          <span>물주기: ${plan.waterStage || 0}%</span>
         </div>
-        <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-          <div class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: ${plan.waterStage || 0}%"></div>
+        <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+          <div class="bg-emerald-500 h-3 rounded-full transition-all duration-300" style="width: ${plan.waterStage || 0}%"></div>
         </div>
       </div>
 
-      <!-- Met Pets Badge Display -->
       ${plan.metPets && plan.metPets.length > 0 ? `
-        <div class="bg-amber-50 border border-amber-200 rounded-xl p-2 text-xs flex items-center gap-2 text-amber-800">
-          <span class="font-bold">🐾 방문한 꼬마 손님:</span>
-          ${plan.metPets.map(pt => `<span>${pt.icon} ${pt.name}</span>`).join(', ')}
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-2 text-xs flex items-center gap-2 text-amber-800 font-bold">
+          <span>🐾 방문 펫:</span> ${plan.metPets.map(p => `${p.icon} ${p.name}`).join(', ')}
         </div>
       ` : ''}
 
       <!-- Action Buttons -->
-      <div class="flex items-center justify-between pt-2 border-t border-slate-200/60">
-        <div class="text-xs text-slate-400">
-          ${!isTimeWindow && plan.status === 'planned' && !isEnded ? '<i class="fa-solid fa-lock mr-1"></i>공부 시간 중에만 물주기 가능' : ''}
-        </div>
+      <div class="flex items-center justify-between pt-2 border-t border-slate-200">
+        <span class="text-xs text-slate-400">
+          ${!isTimeWindow && plan.status === 'planned' ? '🔒 정해진 공부 시간에 물주기 가능' : '✨ 물주기 가능'}
+        </span>
         <div class="flex gap-2">
           ${plan.status === 'planned' ? `
-            <button onclick="waterPlan('${plan.id}')" ${(!isTimeWindow && false) ? '' : ''} class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1">
-              <i class="fa-solid fa-droplet"></i> 물주기
+            <button onclick="waterPlan('${plan.id}')" ${!isTimeWindow ? 'disabled' : ''} class="px-3.5 py-1.5 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 text-white rounded-xl text-xs font-bold shadow transition cursor-pointer flex items-center gap-1">
+              <i class="fa-solid fa-droplet"></i> 물주기 (+25%)
             </button>
-            <button onclick="completePlan('${plan.id}')" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1">
-              <i class="fa-solid fa-check"></i> 달성 완료
+            <button onclick="completePlan('${plan.id}')" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition cursor-pointer flex items-center gap-1">
+              <i class="fa-solid fa-check"></i> 달성 완료 및 수확
             </button>
           ` : `
-            <span class="text-xs font-bold text-emerald-600 bg-emerald-100 px-3 py-1.5 rounded-xl">
+            <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-300">
               <i class="fa-solid fa-circle-check mr-1"></i> 수확 및 달성 완료
             </span>
           `}
@@ -323,73 +285,45 @@ function renderPlanList() {
       </div>
     `;
 
-    container.appendChild(planCard);
+    container.appendChild(card);
   });
 }
 
-// --- Water & Pet Interaction ---
-function waterPlan(planId) {
+window.waterPlan = function(planId) {
   const plan = plans.find(p => p.id === planId);
   if (!plan || plan.status === 'completed') return;
 
-  let currentStage = plan.waterStage || 0;
-  if (currentStage >= 100) {
-    alert('이미 물을 모두 주어 수확할 준비가 되었습니다! 달성 완료 버튼을 눌러주세요.');
+  let stage = plan.waterStage || 0;
+  if (stage >= 100) {
+    alert('이미 물을 완전히 주었습니다! 달성 완료 버튼을 눌러 수확하세요.');
     return;
   }
 
-  // Advance stage by 25%
-  currentStage += 25;
-  plan.waterStage = currentStage;
+  stage += 25;
+  plan.waterStage = stage;
 
-  // Check Pet Encounter at 50% and 100%
-  if (currentStage === 50 || currentStage === 100) {
+  if (stage === 50 || stage === 100) {
     triggerPetEncounter(plan);
   }
 
   renderApp();
-}
+};
 
-function triggerPetEncounter(plan) {
-  // Random pet roll based on probability
-  const rand = Math.random();
-  let selectedPetId = 'pet_chick';
-
-  if (rand < 0.005) selectedPetId = 'pet_owl';
-  else if (rand < 0.035) selectedPetId = 'pet_panda';
-  else if (rand < 0.15) selectedPetId = 'pet_shiba';
-  else if (rand < 0.50) selectedPetId = 'pet_squirrel';
-
-  const pet = PETS_DATA[selectedPetId];
-  obtainedPets[selectedPetId] = (obtainedPets[selectedPetId] || 0) + 1;
-
-  if (!plan.metPets) plan.metPets = [];
-  plan.metPets.push(pet);
-
-  alert(`🐾 꼬마 손님이 찾아왔습니다!\n[${pet.rarity}] ${pet.icon} ${pet.name}이(가) 농장에 놀러왔습니다!`);
-}
-
-// --- Plan Completion & SP Calculation ---
-function completePlan(planId) {
+window.completePlan = function(planId) {
   const plan = plans.find(p => p.id === planId);
   if (!plan || plan.status === 'completed') return;
 
-  const [sHour, sMin] = plan.startTime.split(':').map(Number);
-  const [eHour, eMin] = plan.endTime.split(':').map(Number);
-  const minutes = (eHour * 60 + eMin) - (sHour * 60 + sMin);
+  const [sH, sM] = plan.startTime.split(':').map(Number);
+  const [eH, eM] = plan.endTime.split(':').map(Number);
+  const minutes = (eH * 60 + eM) - (sH * 60 + sM);
 
-  // Base SP = minutes * 15
   let earnedSp = minutes * 15;
-
-  // Apply Seed Multiplier
   const seedInfo = SEEDS_DATA[plan.seedId] || SEEDS_DATA['seed_carrot'];
   earnedSp = Math.round(earnedSp * seedInfo.spBonus);
 
-  // Apply Equipped Pets Multipliers & Synergies
   const petBuff = getActivePetBuffBonus();
   earnedSp = Math.round(earnedSp * (1 + petBuff));
 
-  // Update Plan state
   plan.status = 'completed';
   plan.waterStage = 100;
   plan.harvestedCrop = {
@@ -399,26 +333,40 @@ function completePlan(planId) {
     date: plan.date
   };
 
-  // Add to Harvested Crop collection
   harvestedCrops.push(plan.harvestedCrop);
-
-  // Grant SP
   userState.sp += earnedSp;
 
-  alert(`🎉 공부 완료!\n축하합니다! ${minutes}분간 공부하여 ${earnedSp} SP를 획득하고 식물을 수확했습니다!`);
+  alert(`🎉 공부 달성 완료!\n${minutes}분 공부 보상으로 ${earnedSp} SP를 획득하고 ${plan.harvestedCrop.name}을(를) 수확했습니다!`);
   renderApp();
-}
+};
 
-function deletePlan(planId) {
-  if (confirm('이 공부 계획을 삭제하시겠습니까?')) {
+window.deletePlan = function(planId) {
+  if (confirm('계획을 삭제하시겠습니까?')) {
     plans = plans.filter(p => p.id !== planId);
     renderApp();
   }
+};
+
+function triggerPetEncounter(plan) {
+  const rand = Math.random();
+  let petId = 'pet_chick';
+
+  if (rand < 0.05) petId = 'pet_owl';
+  else if (rand < 0.15) petId = 'pet_panda';
+  else if (rand < 0.35) petId = 'pet_shiba';
+  else if (rand < 0.65) petId = 'pet_squirrel';
+
+  const pet = PETS_DATA[petId];
+  obtainedPets[petId] = (obtainedPets[petId] || 0) + 1;
+
+  if (!plan.metPets) plan.metPets = [];
+  plan.metPets.push(pet);
+
+  alert(`🐾 꼬마 손님이 찾아왔습니다!\n[${pet.rarity}] ${pet.icon} ${pet.name}이(가) 등장했습니다!`);
 }
 
-// --- Event Handling & Form Modal ---
+// --- Event Handlers & Modals ---
 function initEvents() {
-  // School Modal Buttons
   document.querySelectorAll('.grade-select-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       userState.grade = btn.dataset.grade;
@@ -432,7 +380,6 @@ function initEvents() {
     document.getElementById('schoolModal').classList.remove('hidden');
   });
 
-  // Open Add Plan Modal
   document.getElementById('openPlanModalBtn').addEventListener('click', () => {
     document.getElementById('planDate').value = selectedDateStr;
     updateSubjectOptions();
@@ -444,17 +391,12 @@ function initEvents() {
     document.getElementById('planModal').classList.add('hidden');
   });
 
-  // Custom Subject Toggle
   document.getElementById('planSubject').addEventListener('change', (e) => {
-    const customContainer = document.getElementById('customSubjectContainer');
-    if (e.target.value === '기타') {
-      customContainer.classList.remove('hidden');
-    } else {
-      customContainer.classList.add('hidden');
-    }
+    const container = document.getElementById('customSubjectContainer');
+    if (e.target.value === '기타') container.classList.remove('hidden');
+    else container.classList.add('hidden');
   });
 
-  // Form Submit Add Plan
   document.getElementById('planForm').addEventListener('submit', (e) => {
     e.preventDefault();
 
@@ -468,45 +410,35 @@ function initEvents() {
     const title = document.getElementById('planTitle').value.trim();
     const seedId = document.getElementById('planSeedSelect').value;
 
-    // Validate Duration >= 30 mins
     const [sH, sM] = startTime.split(':').map(Number);
     const [eH, eM] = endTime.split(':').map(Number);
     const duration = (eH * 60 + eM) - (sH * 60 + sM);
 
     if (duration < 30) {
-      alert('공부 계획 시간은 최소 30분 이상이어야 합니다.');
+      alert('공부 시간은 최소 30분 이상이어야 합니다.');
       return;
     }
 
-    // Overlap Prevention Logic
     const hasOverlap = plans.some(p => {
       if (p.date !== date) return false;
       const [psH, psM] = p.startTime.split(':').map(Number);
       const [peH, peM] = p.endTime.split(':').map(Number);
-      const pStart = psH * 60 + psM;
-      const pEnd = peH * 60 + peM;
-
-      const newStart = sH * 60 + sM;
-      const newEnd = eH * 60 + eM;
-
-      return (newStart < pEnd && newEnd > pStart);
+      return ((sH * 60 + sM) < (peH * 60 + peM) && (eH * 60 + eM) > (psH * 60 + psM));
     });
 
     if (hasOverlap) {
-      alert('선택한 시간에 이미 다른 공부 계획이 존재합니다. 시간이 겹치지 않게 설정해주세요.');
+      alert('선택한 시간에 이미 공부 계획이 존재합니다!');
       return;
     }
 
-    // Deduct seed inventory
     if (seedInventory[seedId] && seedInventory[seedId] > 0) {
       seedInventory[seedId]--;
       if (seedInventory[seedId] === 0) delete seedInventory[seedId];
     } else {
-      alert('선택한 씨앗이 인벤토리에 없습니다.');
+      alert('씨앗을 먼저 선택해주세요.');
       return;
     }
 
-    // Save Plan
     plans.push({
       id: 'plan_' + Date.now(),
       date,
@@ -525,7 +457,6 @@ function initEvents() {
     renderApp();
   });
 
-  // Gacha Buttons
   document.getElementById('gacha1Btn').addEventListener('click', () => performGacha(1));
   document.getElementById('gacha10Btn').addEventListener('click', () => performGacha(10));
   document.getElementById('closeGachaModalBtn').addEventListener('click', () => {
@@ -559,11 +490,11 @@ function updateSeedSelectOptions() {
   });
 }
 
-// --- Seed Gacha System ---
+// --- Gacha ---
 function performGacha(count) {
   const cost = count * 100;
   if (userState.sp < cost) {
-    alert(`스터디 포인트가 부족합니다. (필요: ${cost} SP)`);
+    alert(`SP가 부족합니다. (필요: ${cost} SP)`);
     return;
   }
 
@@ -572,23 +503,22 @@ function performGacha(count) {
 
   for (let i = 0; i < count; i++) {
     const rand = Math.random();
-    let drawnSeedId = 'seed_carrot';
+    let drawnId = 'seed_carrot';
 
-    if (rand < 0.005) drawnSeedId = 'seed_tree';       // SSR 0.5%
-    else if (rand < 0.035) drawnSeedId = 'seed_rose';  // Legendary 3%
-    else if (rand < 0.15) drawnSeedId = 'seed_clover'; // Epic 11.5%
-    else if (rand < 0.50) drawnSeedId = 'seed_sunflower'; // Rare 35%
+    if (rand < 0.005) drawnId = 'seed_tree';
+    else if (rand < 0.035) drawnId = 'seed_rose';
+    else if (rand < 0.15) drawnId = 'seed_clover';
+    else if (rand < 0.50) drawnId = 'seed_sunflower';
 
-    seedInventory[drawnSeedId] = (seedInventory[drawnSeedId] || 0) + 1;
-    results.push(SEEDS_DATA[drawnSeedId]);
+    seedInventory[drawnId] = (seedInventory[drawnId] || 0) + 1;
+    results.push(SEEDS_DATA[drawnId]);
   }
 
-  // Display Modal Results
   const listContainer = document.getElementById('gachaResultList');
   listContainer.innerHTML = '';
   results.forEach(res => {
     const item = document.createElement('div');
-    item.className = `p-3 rounded-xl border flex flex-col items-center justify-center bg-rarity-${res.rarity.toLowerCase()}`;
+    item.className = `p-3 rounded-xl flex flex-col items-center justify-center bg-rarity-${res.rarity.toLowerCase()}`;
     item.innerHTML = `
       <span class="text-3xl mb-1">${res.icon}</span>
       <span class="text-xs font-bold">${res.name}</span>
@@ -601,27 +531,26 @@ function performGacha(count) {
   renderApp();
 }
 
-// --- Inventory & Farm Display ---
+// --- Inventory & Pets UI ---
 function renderSeedInventory() {
   const grid = document.getElementById('seedInventoryGrid');
   grid.innerHTML = '';
 
   const keys = Object.keys(seedInventory);
   if (keys.length === 0) {
-    grid.innerHTML = '<p class="text-xs text-slate-400 col-span-full">보유한 씨앗이 없습니다. 뽑기 메뉴에서 씨앗을 획득하세요!</p>';
+    grid.innerHTML = '<p class="text-xs text-slate-400 col-span-full">보유한 씨앗이 없습니다. 씨앗 뽑기 탭을 이용해보세요!</p>';
     return;
   }
 
   keys.forEach(k => {
     const seed = SEEDS_DATA[k];
-    const count = seedInventory[k];
     const card = document.createElement('div');
-    card.className = `p-3 rounded-2xl border text-center bg-rarity-${seed.rarity.toLowerCase()}`;
+    card.className = `p-3 rounded-2xl text-center bg-rarity-${seed.rarity.toLowerCase()}`;
     card.innerHTML = `
       <div class="text-3xl mb-1">${seed.icon}</div>
-      <div class="text-xs font-bold text-slate-800">${seed.name}</div>
-      <div class="text-[10px] text-slate-500 mb-1">SP 보너스 ×${seed.spBonus}</div>
-      <div class="text-xs font-black bg-white/70 rounded-full py-0.5 px-2 inline-block">보유: ${count}개</div>
+      <div class="text-xs font-bold">${seed.name}</div>
+      <div class="text-[10px] opacity-80 mb-1">SP 보너스 ×${seed.spBonus}</div>
+      <div class="text-xs font-black bg-white/80 rounded-full py-0.5 px-2 inline-block shadow-sm">보유: ${seedInventory[k]}개</div>
     `;
     grid.appendChild(card);
   });
@@ -632,13 +561,13 @@ function renderHarvestedCrops() {
   grid.innerHTML = '';
 
   if (harvestedCrops.length === 0) {
-    grid.innerHTML = '<p class="text-xs text-slate-400 col-span-full">수확한 식물이 없습니다. 공부를 완료하고 작물을 수확해 보세요!</p>';
+    grid.innerHTML = '<p class="text-xs text-slate-400 col-span-full">수확한 작물이 없습니다.</p>';
     return;
   }
 
   harvestedCrops.forEach(crop => {
     const card = document.createElement('div');
-    card.className = `p-3 rounded-2xl border text-center bg-emerald-50 border-emerald-200`;
+    card.className = `p-3 rounded-2xl text-center bg-emerald-50 border border-emerald-200`;
     card.innerHTML = `
       <div class="text-3xl mb-1">${crop.icon}</div>
       <div class="text-xs font-bold text-slate-800">${crop.name}</div>
@@ -648,9 +577,7 @@ function renderHarvestedCrops() {
   });
 }
 
-// --- Pets & Synergies ---
 function renderPetsAndSynergies() {
-  // Equipped Pets
   const equipGrid = document.getElementById('equippedPetsGrid');
   equipGrid.innerHTML = '';
 
@@ -659,50 +586,47 @@ function renderPetsAndSynergies() {
     const pet = PETS_DATA[petId];
 
     const slot = document.createElement('div');
-    slot.className = `p-3 rounded-2xl border-2 border-dashed border-slate-200 flex items-center gap-3 bg-slate-50`;
-
     if (pet) {
-      slot.className = `p-3 rounded-2xl border-2 border-emerald-400 bg-emerald-50 flex items-center justify-between`;
+      slot.className = `p-3 rounded-2xl border-2 border-emerald-400 bg-emerald-50 flex items-center justify-between shadow-sm`;
       slot.innerHTML = `
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3">
           <span class="text-3xl">${pet.icon}</span>
           <div>
             <div class="text-xs font-bold text-slate-800">${pet.name}</div>
-            <div class="text-[10px] text-emerald-600">${pet.bonusText}</div>
+            <div class="text-[10px] text-emerald-600 font-bold">${pet.bonusText}</div>
           </div>
         </div>
-        <button onclick="unequipPet(${i})" class="text-xs text-red-500 font-bold px-2 py-1 bg-white rounded-lg border">해제</button>
+        <button onclick="unequipPet(${i})" class="text-xs text-red-500 font-bold px-2 py-1 bg-white rounded-lg border border-slate-200 shadow-sm cursor-pointer">해제</button>
       `;
     } else {
+      slot.className = `p-3 rounded-2xl border-2 border-dashed border-slate-200 flex items-center gap-2 bg-slate-50/50`;
       slot.innerHTML = `
-        <span class="text-2xl text-slate-300"><i class="fa-solid fa-plus"></i></span>
-        <span class="text-xs text-slate-400 font-semibold">펫 슬롯 ${i + 1} (미장착)</span>
+        <span class="text-xl text-slate-300"><i class="fa-solid fa-plus"></i></span>
+        <span class="text-xs text-slate-400 font-bold">슬롯 ${i + 1} 미장착</span>
       `;
     }
     equipGrid.appendChild(slot);
   }
 
-  // Active Synergies
   const synList = document.getElementById('activeSynergiesList');
   synList.innerHTML = '';
 
   SYNERGIES.forEach(syn => {
-    const isActive = syn.petReq.every(reqId => equippedPets.includes(reqId));
+    const isActive = syn.petReq.every(r => equippedPets.includes(r));
     const card = document.createElement('div');
-    card.className = `p-3 rounded-xl border flex justify-between items-center ${isActive ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-slate-50 border-slate-200 opacity-50'}`;
+    card.className = `p-3 rounded-xl border flex justify-between items-center ${isActive ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200 opacity-50'}`;
     card.innerHTML = `
       <div>
         <div class="text-xs font-bold flex items-center gap-2">
           <span>${syn.name}</span>
-          ${isActive ? '<span class="bg-amber-400 text-white text-[9px] px-1.5 py-0.2 rounded-full">활성화</span>' : ''}
+          ${isActive ? '<span class="bg-amber-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold">활성화</span>' : ''}
         </div>
-        <div class="text-[10px] text-slate-500">${syn.desc} (필요: ${syn.petReq.map(id => PETS_DATA[id].name).join(' + ')})</div>
+        <div class="text-[10px] text-slate-500">${syn.desc}</div>
       </div>
     `;
     synList.appendChild(card);
   });
 
-  // Pet Codex
   const codexGrid = document.getElementById('petCodexGrid');
   codexGrid.innerHTML = '';
 
@@ -718,8 +642,8 @@ function renderPetsAndSynergies() {
       <div class="text-xs font-bold text-slate-800">${pet.name}</div>
       <div class="text-[10px] text-slate-500 mb-2">${pet.bonusText}</div>
       ${count > 0 ? `
-        <button onclick="equipPet('${id}')" class="text-[10px] px-2 py-1 rounded-lg font-bold ${isEquipped ? 'bg-emerald-600 text-white' : 'bg-slate-200 hover:bg-emerald-100 text-slate-700'}">
-          ${isEquipped ? '장착 됨' : '장착 하기'}
+        <button onclick="equipPet('${id}')" class="text-[10px] px-2.5 py-1 rounded-lg font-bold cursor-pointer ${isEquipped ? 'bg-emerald-600 text-white' : 'bg-slate-200 hover:bg-emerald-100 text-slate-700'}">
+          ${isEquipped ? '장착 됨' : '장착하기'}
         </button>
       ` : '<span class="text-[10px] text-slate-400">미발견</span>'}
     `;
@@ -727,50 +651,36 @@ function renderPetsAndSynergies() {
   });
 }
 
-function equipPet(petId) {
+window.equipPet = function(petId) {
   if (equippedPets.includes(petId)) return;
-  if (equippedPets.length >= 2) {
-    equippedPets.shift(); // Remove first equipped pet if full
-  }
+  if (equippedPets.length >= 2) equippedPets.shift();
   equippedPets.push(petId);
   renderApp();
-}
+};
 
-function unequipPet(index) {
+window.unequipPet = function(index) {
   equippedPets.splice(index, 1);
   renderApp();
-}
+};
 
 function getActivePetBuffBonus() {
-  let totalBonus = 0;
-
-  // Add individual pet bonuses
+  let total = 0;
   equippedPets.forEach(id => {
-    if (PETS_DATA[id]) {
-      totalBonus += PETS_DATA[id].spMultiplier;
-    }
+    if (PETS_DATA[id]) total += PETS_DATA[id].spMultiplier;
   });
-
-  // Add synergy bonuses
   SYNERGIES.forEach(syn => {
-    const isActive = syn.petReq.every(reqId => equippedPets.includes(reqId));
-    if (isActive) {
-      totalBonus += syn.bonus;
-    }
+    if (syn.petReq.every(r => equippedPets.includes(r))) total += syn.bonus;
   });
-
-  return totalBonus;
+  return total;
 }
 
 function renderSidebarBuffs() {
   const buffContainer = document.getElementById('sidebarBuffList');
-  const buffTotalElem = document.getElementById('totalBuffValue');
-  const totalBonus = getActivePetBuffBonus();
-
-  buffTotalElem.textContent = `+${Math.round(totalBonus * 100)}% SP`;
+  const total = getActivePetBuffBonus();
+  document.getElementById('totalBuffValue').textContent = `+${Math.round(total * 100)}% SP`;
 
   if (equippedPets.length === 0) {
-    buffContainer.innerHTML = '<p class="text-slate-400 italic">장착된 펫이나 활성화된 시너지가 없습니다.</p>';
+    buffContainer.innerHTML = '<p class="text-slate-400 italic">장착된 펫이 없습니다.</p>';
     return;
   }
 
@@ -779,33 +689,18 @@ function renderSidebarBuffs() {
     const pet = PETS_DATA[id];
     html += `<div class="flex justify-between"><span>${pet.icon} ${pet.name}</span><span class="font-bold text-emerald-600">${pet.bonusText}</span></div>`;
   });
-
-  SYNERGIES.forEach(syn => {
-    const isActive = syn.petReq.every(reqId => equippedPets.includes(reqId));
-    if (isActive) {
-      html += `<div class="flex justify-between text-amber-600 font-bold"><span>✨ 시너지: ${syn.name}</span><span>+${Math.round(syn.bonus * 100)}%</span></div>`;
-    }
-  });
-
   buffContainer.innerHTML = html;
 }
 
-// --- Weekly Report Chart ---
 let weeklyChartInstance = null;
-
 function renderWeeklyReport() {
   const ctx = document.getElementById('weeklyChart').getContext('2d');
-
-  // Compute dummy past 7 days rates based on plans
   const days = ['월', '화', '수', '목', '금', '토', '일'];
   const completionData = [80, 100, 60, 90, 100, 75, 85];
 
-  const avg = Math.round(completionData.reduce((a, b) => a + b, 0) / completionData.length);
-  document.getElementById('weeklyAvgRate').textContent = `${avg}%`;
+  document.getElementById('weeklyAvgRate').textContent = '84%';
 
-  if (weeklyChartInstance) {
-    weeklyChartInstance.destroy();
-  }
+  if (weeklyChartInstance) weeklyChartInstance.destroy();
 
   weeklyChartInstance = new Chart(ctx, {
     type: 'line',
@@ -818,19 +713,13 @@ function renderWeeklyReport() {
         backgroundColor: 'rgba(16, 185, 129, 0.1)',
         fill: true,
         tension: 0.3,
-        borderWidth: 3,
-        pointBackgroundColor: '#047857'
+        borderWidth: 3
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 100
-        }
-      }
+      scales: { y: { beginAtZero: true, max: 100 } }
     }
   });
 }
