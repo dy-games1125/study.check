@@ -1,253 +1,55 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: 'Malgun Gothic', sans-serif;
-}
+/* Custom App CSS Styling */
 
-body {
-  background-color: #f0fdf4;
-  color: #1f2937;
-  display: flex;
-  justify-content: center;
-  padding: 20px;
-}
-
-.app-container {
-  width: 100%;
-  max-width: 480px;
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-  padding: 20px;
-  border: 2px solid #bbf7d0;
-}
-
-/* Header */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #dcfce7;
-  padding: 12px 16px;
-  border-radius: 12px;
-  font-weight: bold;
-  margin-bottom: 15px;
-}
-
-.currency {
-  color: #16a34a;
-}
-
-/* Nav Tabs */
-.nav-tabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 15px;
-}
-
+/* Transitions & Animations */
 .tab-btn {
-  flex: 1;
-  padding: 8px 4px;
-  border: none;
-  background: #e5e7eb;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
+  @apply px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition flex items-center gap-2 whitespace-nowrap;
 }
-
 .tab-btn.active {
-  background: #22c55e;
-  color: white;
+  @apply bg-emerald-600 text-white shadow-sm hover:bg-emerald-600 hover:text-white;
 }
 
-/* Tab Contents */
-.tab-content {
-  display: none;
+.modal-overlay {
+  @apply fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-200;
 }
 
-.tab-content.active {
-  display: block;
+.modal-card {
+  animation: modalUp 0.25s ease-out forwards;
 }
 
-/* Farm View */
-.farm-area {
-  background: #fef08a;
-  height: 240px;
-  border-radius: 16px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 2px dashed #facc15;
-  overflow: hidden;
-  margin-bottom: 15px;
+@keyframes modalUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-.pot {
-  width: 100px;
-  height: 100px;
-  background: #b45309;
-  border-radius: 0 0 30px 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 40px;
-  cursor: pointer;
-  position: relative;
-  box-shadow: inset 0 8px 0 #78350f;
+.grade-select-btn {
+  @apply w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-500 hover:bg-emerald-50 transition text-left cursor-pointer;
 }
 
-.plant-stage {
-  position: absolute;
-  top: -50px;
-  font-size: 50px;
+/* Calendar Styling */
+.calendar-day-cell {
+  @apply min-h-[70px] bg-slate-50/50 rounded-xl p-1.5 border border-slate-100 flex flex-col justify-between transition cursor-pointer hover:bg-emerald-50/50;
+}
+.calendar-day-cell.today {
+  @apply border-emerald-500 bg-emerald-50/30 font-bold;
+}
+.calendar-day-cell.selected {
+  @apply ring-2 ring-emerald-500 bg-emerald-100/40;
 }
 
-.water-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  display: none;
-  animation: bounce 1s infinite;
+/* Plant Card State Animation */
+.plant-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.guest-animal {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  font-size: 40px;
-  cursor: pointer;
-  animation: pulse 1.5s infinite;
-}
-
-/* Timer Controls */
-.timer-display {
-  font-size: 32px;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 10px;
-  color: #15803d;
-}
-
-.progress-bar-container {
-  width: 100%;
-  height: 16px;
-  background: #e5e7eb;
-  border-radius: 8px;
-  overflow: hidden;
-  margin-bottom: 15px;
-}
-
-.progress-bar {
-  width: 0%;
-  height: 100%;
-  background: #22c55e;
-  transition: width 0.3s;
-}
-
-.controls {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.input-time {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-.btn {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  background: #22c55e;
-  color: white;
-}
-
-.btn:disabled {
-  background: #9ca3af;
-}
-
-/* Grid & Cards */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.card {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 12px;
-  text-align: center;
-  position: relative;
-}
-
-.card-title {
-  font-weight: bold;
-  margin-bottom: 4px;
-}
-
-.badge {
-  display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: bold;
-  color: white;
-  margin-bottom: 6px;
-}
-
-.common { background: #6b7280; }
-.rare { background: #3b82f6; }
-.legendary { background: #eab308; }
-.mythic { background: #ec4899; }
-
-/* Shop & Inventory */
-.shop-box {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  padding: 12px;
-  border-radius: 10px;
-  margin-bottom: 10px;
-  text-align: center;
-}
-
-/* Planner Item */
-.plan-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  padding: 10px 12px;
-  border-radius: 8px;
-  margin-bottom: 6px;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
+/* Rarity Color Badge Helpers */
+.bg-rarity-common { background-color: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+.bg-rarity-rare { background-color: #dcfce7; color: #15803d; border-color: #86efac; }
+.bg-rarity-epic { background-color: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+.bg-rarity-legendary { background-color: #f3e8ff; color: #6b21a8; border-color: #d8b4fe; }
+.bg-rarity-ssr { background-color: #fef3c7; color: #b45309; border-color: #fde047; }
